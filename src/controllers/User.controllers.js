@@ -26,22 +26,26 @@ const registerUser=asyncHandler(async(req,res)=>{
 
 
     //unique users
-    const existedUser=User.findOne({
+    const existedUser=await User.findOne({
         $or:[{username},{email}]
     })
     if(existedUser===true){
         throw new ApiError(409,"user is alerady there")
     }
-    console.log("avatar",req.files?.avatar[0]?.path);
+    // console.log("avatar0",req.files);
+    // console.log("coverimage  ",req.files?.coverImage?.[0]);
+
+    // console.log("avatar",req.files?.avatar[0]?.path);
+    // console.log("coverImagelocalpath ",req.files?.coverImage?.[0]?.path);
     const avatarlocalpath=req.files?.avatar[0]?.path;
-    const coverImagelocalpath=req.files?.coverImage[0]?.path;
+    const coverImagelocalpath=req.files?.coverImage?.path;
     if(avatarlocalpath===false){
         throw new ApiError(409,"avatar is not alerady there")
     }
-    const avatar=await uploadcloudinary(avatarlocalpath)
-    const coverImage=await uploadcloudinary(coverImagelocalpath)
+    const Avatar=await uploadcloudinary(avatarlocalpath)
+    const CoverImage=await uploadcloudinary(coverImagelocalpath) || " "
 
-    if(!avatar){
+    if(!Avatar){
         throw new ApiError(409,"avatar is not alerady there")
     }
     const user=await User.create(
@@ -49,12 +53,12 @@ const registerUser=asyncHandler(async(req,res)=>{
             username,
             email,
             fullname,
-            avatar:avatar.url,
+            avatar:Avatar.url,
             password,
-            coverImage:coverImage?.url|| "",
+            coverImage:CoverImage?.url|| "",
         }
     )
-    const Usercreated=await user.findById(user._id).select("-password -refreshtoken")
+    const Usercreated=await User.findById(user._id).select("-password -refreshtoken")
     if(!Usercreated){
         throw new ApiError(500,"something went wrong")
 
